@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Revolution Noodle Nutrition Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{box-sizing:border-box;--bg:#F6EFE0;--card:#FFFBF2;--ink:#2B2118;--mut:#7A6C5C;--red:#C41230;--green:#2E7D4F;--line:#E4D8C2;--bar:#EADFC8;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1F1A14;--card:#2A231B;--ink:#F4EBDB;--mut:#B3A58F;--line:#40362A;--bar:#3A3025;--green:#5FBF86;--red:#EE5A70;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1F1A14;--card:#2A231B;--ink:#F4EBDB;--mut:#B3A58F;--line:#40362A;--bar:#3A3025;--green:#5FBF86;--red:#EE5A70;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Fredoka',system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.35}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 90px}
+h1{font-size:26px;margin:0}h2{font-size:19px;margin:20px 0 8px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sub{color:var(--mut);font-size:14px;margin:2px 0 0}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px;margin:12px 0}
+.btn{font:inherit;font-weight:600;border:0;border-radius:999px;padding:13px 20px;background:var(--red);color:#fff;cursor:pointer;width:100%;font-size:17px}
+.btn.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line);width:auto;padding:8px 14px;font-size:14px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bar{margin:9px 0}.bar .l{display:flex;justify-content:space-between;font-size:14px}
+.track{height:12px;background:var(--bar);border-radius:99px;overflow:hidden;margin-top:3px}
+.fill{height:100%;border-radius:99px;transition:width .25s}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;margin:6px 0;border:1.5px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;width:100%;font:inherit;color:var(--ink);text-align:left}
+.opt.on{border-color:var(--green);background:color-mix(in srgb,var(--green) 12%,var(--card))}
+.opt small{color:var(--mut)}
+.por{display:flex;gap:4px}.por span{padding:3px 9px;border-radius:99px;border:1.5px solid var(--line);font-size:13px}.por span.a{background:var(--green);color:#fff;border-color:var(--green)}
+.types{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.type{font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:18px 10px;text-align:center;cursor:pointer}
+.type b{display:block;font-size:34px}
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:6px 0}
+.meal{display:flex;justify-content:space-between;gap:10px}
+.tag{font-size:12px;color:var(--mut)}
+.req{color:var(--red);font-size:13px}
+.foot{font-size:12px;color:var(--mut);margin-top:22px}
+.modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal .card{max-width:320px;text-align:center}
+input{font:inherit;width:70px;padding:6px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--ink)}
+.back{background:none;border:0;font:inherit;color:var(--red);cursor:pointer;padding:0;font-size:16px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const I=a=>a.map(([n,c,p,cb,f])=>({n,c,p,cb,f}));
+const PROT=[['Grilled Chicken',140,26,0,3],['White Meat Chicken',130,24,2,3],['Luncheon Meat',200,8,3,17],['Tofu',90,9,3,5],['Fish Ball',100,9,9,3],['Fish Tofu',110,8,10,4],['Fried Egg',90,6,0,7],['Beef',200,22,2,12],['Shrimp',100,20,1,2],['Vegetables',50,3,10,0]];
+const TOP=I([['Bubbles: Tapioca Pearls',130,0,32,0],['Bubbles: Rainbow Jelly',60,0,15,0],['Bubbles: Lychee Jelly',60,0,15,0],['Popping Boba: Mango',40,0,10,0],['Popping Boba: Strawberry',40,0,10,0]]);
+const SUG=I([['No sugar',-100,0,-25,0],['Light sugar',-50,0,-12,0]]);
+const fl=(names,c,p,cb,f)=>I(names.map(n=>[n,c,p,cb,f]));
+const TYPES={
+ bowl:{t:'Hot Pot Noodle Bowl',e:'🍜',groups:[
+  {id:'pro',t:'Protein',req:1,items:I(PROT)},
+  {id:'ext',t:'Extra Protein',multi:1,items:I(PROT)},
+  {id:'noo',t:'Noodles',multi:1,items:I([['Egg Noodle',220,8,40,3],['Rice Noodle',200,2,45,0],['Ramen',290,7,43,10],['Wide Noodle',240,7,48,1],['Udon',220,6,46,1]])},
+  {id:'bro',t:'Broth',multi:1,items:I([['Spicy Beef',120,5,6,8],['Not Spicy',40,3,3,2],['Vegetable',25,1,5,0]])},
+  {id:'top',t:'Topping',items:I([['Chili Oil',90,0,0,10],['Green Onion',3,0,1,0],['Cilantro',2,0,0,0]])}]},
+ bao:{t:'Bao Bun',e:'🥟',groups:[{id:'bao',t:'Choose your bao',req:1,multi:1,items:I([['Pork Bao Bun',250,9,32,10],['Red Bean Bao',230,5,42,4]])}]},
+ fruit:{t:'Fruit Tea',e:'🍓',groups:[
+  {id:'fl',t:'Flavor',req:1,items:fl(['Peach','Lychee','Mango','Rose','Strawberry'],120,0,30,0)},
+  {id:'tp',t:'Bubbles & Popping Boba',multi:1,items:TOP},{id:'sg',t:'Sugar',items:SUG}]},
+ milk:{t:'Milk Tea',e:'🧋',groups:[
+  {id:'fl',t:'Flavor',req:1,items:fl(['Original','Taro','Matcha','Mango','Rose','Strawberry','Brown Sugar','Coffee','Thai'],220,3,38,6)},
+  {id:'tp',t:'Bubbles & Popping Boba',multi:1,items:TOP},{id:'sg',t:'Sugar',items:SUG}]},
+ smoo:{t:'Smoothie',e:'🥤',groups:[{id:'fl',t:'Flavor',req:1,items:fl(['Mango','Strawberry'],200,2,46,1)}]}
+};
+const KEYS=[['c','Calories','kcal','#C41230'],['p','Protein','g','#2E7D4F'],['cb','Carbs','g','#D99A2B'],['f','Fat','g','#8A6B4E']];
+let S={meals:[],goals:{c:2000,p:100,cb:250,f:70},view:'home',d:null,qr:false};
+try{const x=JSON.parse(localStorage.getItem('rn')||'null');if(x){S.meals=x.meals||[];S.goals=x.goals||S.goals}}catch(e){}
+const save=()=>{try{localStorage.setItem('rn',JSON.stringify({meals:S.meals,goals:S.goals}))}catch(e){}};
+const PL={0.5:'½×',1:'1×',2:'2×'};
+function calc(type,sel){const t={c:0,p:0,cb:0,f:0};TYPES[type].groups.forEach(g=>{const s=sel[g.id]||{};g.items.forEach(i=>{if(s[i.n])KEYS.forEach(([k])=>t[k]+=i[k]*s[i.n])})});KEYS.forEach(([k])=>t[k]=Math.max(0,Math.round(t[k])));return t}
+function names(type,sel){const o=[];TYPES[type].groups.forEach(g=>Object.entries(sel[g.id]||{}).forEach(([n,q])=>o.push(n+(q!=1?' ('+PL[q]+')':''))));return o}
+function bars(t,goals){return KEYS.map(([k,l,u,col])=>{const pct=Math.min(100,t[k]/goals[k]*100);return `<div class="bar"><div class="l"><b>${l}</b><span>${t[k]} / ${goals[k]} ${u}</span></div><div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div></div>`}).join('')}
+function total(){const t={c:0,p:0,cb:0,f:0};S.meals.forEach(m=>KEYS.forEach(([k])=>t[k]+=m.tot[k]));return t}
+function go(v){S.view=v;render();scrollTo(0,0)}
+function start(){S.d={id:null,type:null,sel:{}};go('type')}
+function pick(k){S.d.type=k;S.d.sel={};go('custom')}
+function tog(g,n){const grp=TYPES[S.d.type].groups.find(x=>x.id===g);const s=S.d.sel[g]=S.d.sel[g]||{};if(s[n]){delete s[n]}else{if(!grp.multi)S.d.sel[g]={};S.d.sel[g][n]=1}render()}
+function por(g,n,q,e){e.stopPropagation();S.d.sel[g][n]=q;render()}
+function done(){const d=S.d,tot=calc(d.type,d.sel),it=names(d.type,d.sel);const m={id:d.id||Date.now(),type:d.type,sel:d.sel,tot,items:it};if(d.id){S.meals=S.meals.map(x=>x.id===d.id?m:x)}else S.meals.push(m);save();go('home')}
+function edit(id){const m=S.meals.find(x=>x.id===id);S.d={id,type:m.type,sel:JSON.parse(JSON.stringify(m.sel))};go('custom')}
+function del(id){S.meals=S.meals.filter(x=>x.id!==id);save();render()}
+function goal(k,v){S.goals[k]=Math.max(1,+v||1);save();render()}
+function share(){S.qr=true;render();setTimeout(()=>{try{new QRCode(document.getElementById('qr'),{text:location.href,width:180,height:180})}catch(e){document.getElementById('qr').textContent='QR unavailable'}},0)}
+function copy(){try{navigator.clipboard.writeText(location.href)}catch(e){}}
+function render(){const a=document.getElementById('app');let h='';
+if(S.view==='home'){
+ h+=`<div class="top"><div><h1>🍜 Revolution Noodle</h1><p class="sub">5032 Forbes Ave · build your bowl, see the macros</p></div><button class="btn alt" onclick="share()">Share</button></div>
+ <div class="card"><b>Today's tracker</b>${bars(total(),S.goals)}
+ <details><summary class="tag">Set my daily goals</summary><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">${KEYS.map(([k,l])=>`<label class="tag">${l}<br><input type="number" value="${S.goals[k]}" onchange="goal('${k}',this.value)"></label>`).join('')}</div></details></div>
+ <button class="btn" onclick="start()">+ Add meal</button>
+ <h2>Your meals</h2>`;
+ h+=S.meals.length?S.meals.map(m=>`<div class="card"><div class="meal"><div><b>${TYPES[m.type].e} ${TYPES[m.type].t}</b><div class="tag">${m.items.join(', ')}</div></div></div>
+ <div style="margin:8px 0"><b>${m.tot.c} kcal</b> · ${m.tot.p}g protein · ${m.tot.cb}g carbs · ${m.tot.f}g fat</div>
+ <button class="btn alt" onclick="edit(${m.id})">Edit</button> <button class="btn alt" onclick="del(${m.id})">Delete</button></div>`).join(''):`<p class="sub">No meals yet. Tap “Add meal” to start.</p>`;
+ h+=`<p class="foot">Nutrition values are estimates based on typical per-serving amounts. They are not official Revolution Noodle data and portions may vary. Sugar options subtract an estimated amount from drinks.</p>`;
+}
+if(S.view==='type'){h+=`<button class="back" onclick="go('home')">← Back</button><h1>What did you have?</h1><p class="sub">Pick the type of meal</p><div class="types" style="margin-top:14px">${Object.entries(TYPES).map(([k,t])=>`<button class="type" onclick="pick('${k}')"><b>${t.e}</b>${t.t}</button>`).join('')}</div>`}
+if(S.view==='custom'){const d=S.d,T=TYPES[d.type],tot=calc(d.type,d.sel);
+ const ok=T.groups.every(g=>!g.req||Object.keys(d.sel[g.id]||{}).length);
+ h+=`<button class="back" onclick="go('${d.id?'home':'type'}')">← Back</button><h1>${T.e} ${T.t}</h1>
+ <div class="sticky"><div class="card" style="margin:6px 0"><b>${tot.c} kcal</b>${bars(tot,S.goals)}</div></div>`;
+ T.groups.forEach(g=>{h+=`<h2>${g.t} ${g.req?'<span class="req">required</span>':'<span class="tag">optional'+(g.multi?' · pick any':' · pick one')+'</span>'}</h2>`;
+  g.items.forEach(i=>{const q=(d.sel[g.id]||{})[i.n];const sg=g.id==='sg';
+   h+=`<div class="opt ${q?'on':''}" role="button" tabindex="0" onclick="tog('${g.id}','${i.n}')"><div>${q?'✓ ':''}${i.n}<br><small>${sg?'':i.c+' kcal · '+i.p+'P '+i.cb+'C '+i.f+'F'}</small></div>${q&&!sg?`<div class="por">${[0.5,1,2].map(x=>`<span class="${q===x?'a':''}" onclick="por('${g.id}','${i.n}',${x},event)">${PL[x]}</span>`).join('')}</div>`:''}</div>`})});
+ h+=`<div style="position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:var(--bg);border-top:1.5px solid var(--line)"><div style="max-width:528px;margin:auto"><button class="btn" ${ok?'':'disabled'} onclick="done()">${d.id?'Save changes':'Complete meal'}</button></div></div>`}
+if(S.qr)h+=`<div class="modal" onclick="S.qr=false;render()"><div class="card" onclick="event.stopPropagation()"><b>Scan or share</b><p class="sub">Put this QR code at the counter so students can open the tracker.</p><div id="qr" style="display:flex;justify-content:center;margin:12px"></div><button class="btn alt" onclick="copy()">Copy link</button> <button class="btn alt" onclick="S.qr=false;render()">Close</button></div></div>`;
+a.innerHTML=h}
+render();
+</script>
+</body>
+</html>
